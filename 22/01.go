@@ -3,22 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"math"
-	"os"
 	"strconv"
 )
 
-func getInputFile() *os.File {
-	f, err := os.Open("./inputs/01.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return f
-}
-
 func Run01P1() {
-	f := getInputFile()
+	f := GetInputFile("./inputs/01.txt")
 	defer f.Close()
 
 	sc := bufio.NewScanner(f)
@@ -42,7 +32,7 @@ func Run01P1() {
 }
 
 func Run01P2() {
-	f := getInputFile()
+	f := GetInputFile("./inputs/01.txt")
 	defer f.Close()
 
 	sc := bufio.NewScanner(f)

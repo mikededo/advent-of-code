@@ -15,6 +15,10 @@ func isPairInBetween(p1, p2 Pair) bool {
 	return p1.l >= p2.l && p1.l <= p2.r && p1.r >= p2.l && p1.r <= p2.r
 }
 
+func isPairOverlapping(p1, p2 Pair) bool {
+	return (p1.l >= p2.l && p1.l <= p2.r) || (p1.r >= p2.l && p1.r <= p2.r)
+}
+
 func csvToPairs(csvText string) (Pair, Pair) {
 	csv := strings.Split(csvText, ",")
 	f, s := Pair{}, Pair{}
@@ -27,7 +31,7 @@ func csvToPairs(csvText string) (Pair, Pair) {
 	return f, s
 }
 
-func Run04P1() {
+func run(comparator func(Pair, Pair) bool) {
 	f := GetInputFile("./inputs/04.txt")
 
 	sc := bufio.NewScanner(f)
@@ -35,10 +39,18 @@ func Run04P1() {
 	for sc.Scan() {
 		f, s := csvToPairs(sc.Text())
 
-		if isPairInBetween(f, s) || isPairInBetween(s, f) {
+		if comparator(f, s) || comparator(s, f) {
 			c++
 		}
 	}
 
-	fmt.Printf("overlapped lanes: %d\n", c)
+	fmt.Printf("result: %d\n", c)
+}
+
+func Run04P1() {
+	run(isPairInBetween)
+}
+
+func Run04P2() {
+	run(isPairOverlapping)
 }

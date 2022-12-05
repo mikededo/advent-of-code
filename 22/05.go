@@ -68,12 +68,19 @@ func removeNumberLineFromMatrix(mtx [][]string) {
 	}
 }
 
-func applyMoveToMatrix(mtx *[][]string, os, ds, q int) {
+func applyStackMoveToMatrix(mtx *[][]string, os, ds, q int) {
 	for i := 0; i < q; i++ {
 		l := len((*mtx)[os-1])
 		(*mtx)[ds-1] = append((*mtx)[ds-1], (*mtx)[os-1][l-1])
 		(*mtx)[os-1] = (*mtx)[os-1][:l-1]
 	}
+}
+
+func applyListMoveToMatrix(mtx *[][]string, os, ds, q int) {
+	osl := &(*mtx)[os-1]
+	dsl := &(*mtx)[ds-1]
+	*dsl = append(*dsl, (*osl)[len(*osl)-q:]...)
+	*osl = (*osl)[:len(*osl)-q]
 }
 
 func matrixTopValues(mtx [][]string) []string {
@@ -84,7 +91,7 @@ func matrixTopValues(mtx [][]string) []string {
 	return res
 }
 
-func Run05P1() {
+func run05(cb func(*[][]string, int, int, int)) {
 	f := GetInputFile("./inputs/05.txt")
 	sc := bufio.NewScanner(f)
 	parsingMtx := true
@@ -104,8 +111,16 @@ func Run05P1() {
 
 		var q, os, ds int
 		fmt.Sscanf(sc.Text(), "move %d from %d to %d", &q, &os, &ds)
-		applyMoveToMatrix(&mtx, os, ds, q)
+		cb(&mtx, os, ds, q)
 	}
 
-	fmt.Printf("top strings are: %s\n", strings.Join(matrixTopValues(mtx), "-"))
+	fmt.Printf("top strings are: %s\n", strings.Join(matrixTopValues(mtx), ""))
+}
+
+func Run05P1() {
+	run05(applyStackMoveToMatrix)
+}
+
+func Run05P2() {
+	run05(applyListMoveToMatrix)
 }

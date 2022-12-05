@@ -31,7 +31,7 @@ func csvToPairs(csvText string) (Pair, Pair) {
 	return f, s
 }
 
-func run(comparator func(Pair, Pair) bool) {
+func run04(comparator func(Pair, Pair) bool) {
 	f := GetInputFile("./inputs/04.txt")
 
 	sc := bufio.NewScanner(f)
@@ -48,9 +48,9 @@ func run(comparator func(Pair, Pair) bool) {
 }
 
 func Run04P1() {
-	run(isPairInBetween)
+	run04(isPairInBetween)
 }
 
 func Run04P2() {
-	run(isPairOverlapping)
+	run04(isPairOverlapping)
 }

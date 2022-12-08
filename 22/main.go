@@ -1,5 +1,5 @@
 package main
 
 func main() {
-	Run07P1()
+	Run07P2()
 }

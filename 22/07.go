@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -52,6 +53,12 @@ func (m *FileTreeManager) TotalSumOfAtMost100k() int {
 	r := make([]int, 0)
 	m.cdStack[0].TotalSumOfAtMost100k(&r)
 	return sumOfSlice(r)
+}
+
+func (m *FileTreeManager) DirectorySizeList() ([]int, int) {
+	r := make([]int, 0)
+	rs := m.cdStack[0].DirectorySizeList(&r)
+	return r, rs
 }
 
 func NewDirectoryNode(name string) *FileNode {
@@ -110,6 +117,25 @@ func (m *FileNode) TotalSumOfAtMost100k(r *[]int) int {
 	return sum + m.size
 }
 
+func (m *FileNode) DirectorySizeList(r *[]int) int {
+	if len(m.childs) == 0 {
+		return m.size
+	}
+
+	// sum each directory & file
+	sum := 0
+	for _, v := range m.childs {
+		res := v.DirectorySizeList(r)
+		sum += res
+		// add only directories
+		if len(v.childs) != 0 {
+			*r = append(*r, res)
+		}
+	}
+
+	return sum + m.size
+}
+
 func (n *FileNode) ToString() string {
 	return n.toString(0)
 }
@@ -120,7 +146,7 @@ func (n *FileNode) toString(lvl int) string {
 		res += fmt.Sprintf("- %s\n", n.name)
 	} else {
 		indent := strings.Repeat(" ", lvl)
-		res += fmt.Sprintf("%s - %s\n", indent, n.name)
+		res += fmt.Sprintf("%s - %s (%d)\n", indent, n.name, n.size)
 	}
 
 	if len(n.childs) != 0 {
@@ -139,10 +165,18 @@ func sumOfSlice(sl []int) int {
 	return sum
 }
 
-func Run07P1() {
-	f := GetInputFile("./inputs/07.txt")
-	sc := bufio.NewScanner(f)
+func minCloserTo(sl []int, v int) int {
+	minDiff, min := math.MaxInt, 0
+	for _, k := range sl {
+		if k > v && k-v < minDiff {
+			min = k
+			minDiff = k - v
+		}
+	}
+	return min
+}
 
+func generateTree(sc *bufio.Scanner) *FileTreeManager {
 	var tm *FileTreeManager = nil
 	for sc.Scan() {
 		t := strings.Split(sc.Text(), " ")
@@ -170,7 +204,23 @@ func Run07P1() {
 			}
 		}
 	}
+	return tm
+}
 
-	fmt.Println(tm.cdStack[0].ToString())
-	fmt.Println(tm.TotalSumOfAtMost100k())
+func Run07P1() {
+	f := GetInputFile("./inputs/07.txt")
+	sc := bufio.NewScanner(f)
+	tm := generateTree(sc)
+
+	fmt.Printf("total size: %d\n", tm.TotalSumOfAtMost100k())
+}
+
+func Run07P2() {
+	f := GetInputFile("./inputs/07.txt")
+	sc := bufio.NewScanner(f)
+	tm := generateTree(sc)
+
+	dl, root := tm.DirectorySizeList()
+	free := 70000000 - root
+	fmt.Printf("size of dir to delete: %d (needed %d)\n", minCloserTo(dl, 30000000-free), 30000000-free)
 }

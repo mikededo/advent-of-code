@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 )
 
 func fillMatrix(sc *bufio.Scanner) [][]int {
@@ -71,4 +72,69 @@ func Run08P1() {
 	}
 
 	fmt.Printf("visible trees: %d\n", total)
+}
+
+func northScore(m [][]int, col, pos int) int {
+	score := 0
+	threshold := m[pos][col]
+	for i := pos - 1; i >= 0; i-- {
+		score++
+		if m[i][col] >= threshold {
+			break
+		}
+	}
+	return score
+}
+
+func southScore(m [][]int, col, pos int) int {
+	score := 0
+	threshold := m[pos][col]
+	for i := pos + 1; i < len(m); i++ {
+		score++
+		if m[i][col] >= threshold {
+			break
+		}
+	}
+	return score
+}
+
+func eastScore(m [][]int, row, pos int) int {
+	score := 0
+	threshold := m[row][pos]
+	for i := pos + 1; i < len(m); i++ {
+		score++
+		if m[row][i] >= threshold {
+			break
+		}
+	}
+	return score
+}
+
+func westScore(m [][]int, row, pos int) int {
+	score := 0
+	threshold := m[row][pos]
+	for i := pos - 1; i >= 0; i-- {
+		score++
+		if m[row][i] >= threshold {
+			break
+		}
+	}
+	return score
+}
+
+func Run08P2() {
+	f := GetInputFile("./inputs/08.txt")
+	sc := bufio.NewScanner(f)
+	mat := fillMatrix(sc)
+	ms := math.MinInt
+
+	for i := 1; i < len(mat)-1; i++ {
+		for j := 1; j < len(mat[0])-1; j++ {
+			sc := southScore(mat, j, i) * northScore(mat, j, i) * eastScore(mat, i, j) * westScore(mat, i, j)
+			if sc > ms {
+				ms = sc
+			}
+		}
+	}
+	fmt.Printf("max scenic score: %d\n", ms)
 }

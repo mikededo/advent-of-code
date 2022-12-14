@@ -28,7 +28,7 @@ func (m *Monkey) Operate() (int, int) {
 	m.inspectCount++
 	item := m.items[0]
 	m.items = m.items[1:]
-	v := int(math.Floor(float64(m.op(item)) / 3))
+	v := int(math.Floor(float64(m.op(item)) / 1))
 	if m.test(v) {
 		return m.trueTo, v
 	}

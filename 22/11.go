@@ -11,16 +11,18 @@ import (
 type MonkeyInfo [6]string
 
 type Monkey struct {
-	id           int
-	inspectCount int
-	items        []int
-	op           func(int) int
-	test         func(int) bool
-	trueTo       int
-	falseTo      int
+	id              int
+	inspectCount    int
+	divisor         int
+	divisorsProduct int
+	items           []int
+	op              func(int) int
+	test            func(int) bool
+	trueTo          int
+	falseTo         int
 }
 
-func (m *Monkey) Operate() (int, int) {
+func (m *Monkey) Operate(part int) (int, int) {
 	if len(m.items) == 0 {
 		return -1, -1
 	}
@@ -28,7 +30,14 @@ func (m *Monkey) Operate() (int, int) {
 	m.inspectCount++
 	item := m.items[0]
 	m.items = m.items[1:]
-	v := int(math.Floor(float64(m.op(item)) / 1))
+
+	var v int
+	if part == 1 {
+		v = int(float64(m.op(item) / 3))
+	} else {
+		v = m.op(item) % m.divisorsProduct
+	}
+
 	if m.test(v) {
 		return m.trueTo, v
 	}
@@ -76,6 +85,33 @@ func buildMonkeyTest(v int) func(int) bool {
 	}
 }
 
+func runMonkeyBussiness(monkeys []Monkey, part, ite int) {
+	for i := 0; i < ite; i++ {
+		for j := 0; j < len(monkeys); j++ {
+			for {
+				to, v := monkeys[j].Operate(part)
+				if to == -1 {
+					break
+				}
+				monkeys[to].Receive(v)
+			}
+		}
+	}
+}
+
+func calculateMaxBussiness(monkeys []Monkey) (int, int) {
+	maxIns1, maxIns2 := math.MinInt, math.MinInt
+	for _, mm := range monkeys {
+		if mm.inspectCount > maxIns1 {
+			maxIns2 = maxIns1
+			maxIns1 = mm.inspectCount
+		} else if mm.inspectCount > maxIns2 {
+			maxIns2 = mm.inspectCount
+		}
+	}
+	return maxIns1, maxIns2
+}
+
 func parseMonkey(lines MonkeyInfo) Monkey {
 	m := Monkey{}
 	for i, l := range lines {
@@ -102,7 +138,9 @@ func parseMonkey(lines MonkeyInfo) Monkey {
 		case 3:
 			// Divisible by
 			test := split(l, "by ")[1]
-			m.test = buildMonkeyTest(atoi(test))
+			div := atoi(test)
+			m.divisor = div
+			m.test = buildMonkeyTest(div)
 		case 4:
 			// if true
 			tm := split(l, " ")
@@ -118,10 +156,7 @@ func parseMonkey(lines MonkeyInfo) Monkey {
 	return m
 }
 
-func Run11P1() {
-	f := GetInputFile("./inputs/11.txt")
-	sc := bufio.NewScanner(f)
-	split = strings.Split
+func scanMonkeys(sc *bufio.Scanner, part int) []Monkey {
 	monkeys := make([]Monkey, 0)
 	for sc.Scan() {
 		lines := MonkeyInfo{}
@@ -143,27 +178,39 @@ func Run11P1() {
 		sc.Scan()
 	}
 
-	for i := 0; i < 20; i++ {
-		for j := 0; j < len(monkeys); j++ {
-			for {
-				to, v := monkeys[j].Operate()
-				if to == -1 {
-					break
-				}
-				monkeys[to].Receive(v)
-			}
+	if part == 2 {
+		divisiorsProduct := 1
+		for _, m := range monkeys {
+			divisiorsProduct *= m.divisor
+		}
+		for i := range monkeys {
+			monkeys[i].divisorsProduct = divisiorsProduct
 		}
 	}
 
-	maxIns1, maxIns2 := math.MinInt, math.MinInt
-	for _, mm := range monkeys {
-		if mm.inspectCount > maxIns1 {
-			maxIns2 = maxIns1
-			maxIns1 = mm.inspectCount
-		} else if mm.inspectCount > maxIns2 {
-			maxIns2 = mm.inspectCount
-		}
-	}
+	return monkeys
+}
 
+func Run11P1() {
+	f := GetInputFile("./inputs/11.txt")
+	sc := bufio.NewScanner(f)
+	split = strings.Split
+	monkeys := scanMonkeys(sc, 1)
+
+	runMonkeyBussiness(monkeys, 1, 20)
+
+	maxIns1, maxIns2 := calculateMaxBussiness(monkeys)
+	fmt.Printf("monkey bussiness value: %d\n", maxIns1*maxIns2)
+}
+
+func Run11P2() {
+	f := GetInputFile("./inputs/11.txt")
+	sc := bufio.NewScanner(f)
+	split = strings.Split
+	monkeys := scanMonkeys(sc, 2)
+
+	runMonkeyBussiness(monkeys, 2, 10000)
+
+	maxIns1, maxIns2 := calculateMaxBussiness(monkeys)
 	fmt.Printf("monkey bussiness value: %d\n", maxIns1*maxIns2)
 }

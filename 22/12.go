@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 )
 
 type HillPos [2]int
@@ -12,34 +13,45 @@ type HillSolver struct {
 	nodes    map[HillPos]byte
 	visited  map[HillPos]bool
 	currDist map[HillPos]int
+	minDist  int
 	start    HillPos
 	end      HillPos
 }
 
-func (s *HillSolver) FindAllPaths() {
-	bfsQueue := []HillPos{s.start}
-	s.currDist[s.start] = 1
+func (s *HillSolver) FindAllPaths(positions []HillPos) {
+	for _, start := range positions {
+		// restart everything
+		bfsQueue := []HillPos{start}
+		s.currDist = make(map[HillPos]int)
+		s.visited = make(map[HillPos]bool)
 
-	for len(bfsQueue) > 0 {
-		curr := bfsQueue[0]
-		bfsQueue = bfsQueue[1:]
+		s.currDist[start] = 1
 
-		if s.isFinalPath(curr) {
-			s.currDist[s.end] = s.currDist[curr] + 1
-			break
-		}
+		for len(bfsQueue) > 0 {
+			curr := bfsQueue[0]
+			bfsQueue = bfsQueue[1:]
 
-		adjs := [4]HillPos{
-			{curr[0], curr[1] + 1},
-			{curr[0], curr[1] - 1},
-			{curr[0] + 1, curr[1]},
-			{curr[0] - 1, curr[1]},
-		}
-		for _, adj := range adjs {
-			if s.isPossibleNextPath(curr, adj) {
-				s.visited[adj] = true
-				bfsQueue = append(bfsQueue, adj)
-				s.currDist[adj] = s.currDist[curr] + 1
+			if s.isFinalPath(curr) {
+				dist := s.currDist[curr] + 1
+				s.currDist[s.end] = dist
+				if s.minDist > dist {
+					s.minDist = dist
+				}
+				break
+			}
+
+			adjs := [4]HillPos{
+				{curr[0], curr[1] + 1},
+				{curr[0], curr[1] - 1},
+				{curr[0] + 1, curr[1]},
+				{curr[0] - 1, curr[1]},
+			}
+			for _, adj := range adjs {
+				if s.isPossibleNextPath(curr, adj) {
+					s.visited[adj] = true
+					bfsQueue = append(bfsQueue, adj)
+					s.currDist[adj] = s.currDist[curr] + 1
+				}
 			}
 		}
 	}
@@ -66,13 +78,12 @@ func (s *HillSolver) isValidNextByte(curr, next HillPos) bool {
 	return exists && int(nv)-int(cv) <= 1
 }
 
-func Run12P1() {
-	f := GetInputFile("./inputs/12.txt")
-	sc := bufio.NewScanner(f)
+func scanGrid(sc *bufio.Scanner) HillSolver {
 	solver := HillSolver{
 		nodes:    make(map[HillPos]byte),
 		visited:  make(map[HillPos]bool),
 		currDist: make(map[HillPos]int),
+		minDist:  math.MaxInt,
 	}
 
 	i := 0
@@ -90,6 +101,32 @@ func Run12P1() {
 		i--
 	}
 
-	solver.FindAllPaths()
+	return solver
+}
+
+func Run12P1() {
+	f := GetInputFile("./inputs/12.txt")
+	sc := bufio.NewScanner(f)
+	solver := scanGrid(sc)
+
+	solver.FindAllPaths([]HillPos{solver.start})
 	fmt.Printf("minimum path found: %d\n", solver.currDist[solver.end])
+}
+
+// 345
+func Run12P2() {
+	f := GetInputFile("./inputs/12.txt")
+	sc := bufio.NewScanner(f)
+	solver := scanGrid(sc)
+
+	// find all a points
+	points := make([]HillPos, 0)
+	for k, v := range solver.nodes {
+		if v == 'a' {
+			points = append(points, k)
+		}
+	}
+
+	solver.FindAllPaths(points)
+	fmt.Printf("minimum path found of all 'a': %d\n", solver.minDist)
 }
